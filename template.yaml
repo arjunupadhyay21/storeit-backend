@@ -1,0 +1,123 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  StoreIT-backend
+  Sample SAM Template for StoreIT-backend 
+  
+Globals:
+  Function:
+    Timeout: 30
+  Api:
+    Cors:
+      AllowMethods: "'OPTIONS,GET,POST'"
+      AllowOrigin: "'*'"
+      AllowHeaders: "'Content-Type,Authorization'"
+    Auth:
+      DefaultAuthorizer: NONE  # Explicitly set no authentication
+
+Resources:
+  UploadFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: upload_function/app.upload_handler
+      Runtime: python3.12
+      Events:
+        FileUpload:
+          Type: Api
+          Properties:
+            Path: /upload
+            Method: post
+            Auth:  # Explicitly set auth for this endpoint
+              Authorizer: NONE
+      Policies:
+        - S3CrudPolicy:
+            BucketName: my-bucketstorage123
+      Environment:
+        Variables:
+          STORAGE_BUCKET_NAME: my-bucketstorage123
+
+  DownloadFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: download_function/app.download_handler
+      Runtime: python3.12
+      Events:
+        FileDownload:
+          Type: Api
+          Properties:
+            Path: /download
+            Method: post
+            Auth:
+              Authorizer: NONE
+      Policies:
+        - S3CrudPolicy:
+            BucketName: my-bucketstorage123
+      Environment:
+        Variables:
+          STORAGE_BUCKET_NAME: my-bucketstorage123
+
+  DeleteFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: delete_function/app.delete_handler
+      Runtime: python3.12
+      Events:
+        FileDelete:
+          Type: Api
+          Properties:
+            Path: /delete
+            Method: post
+            Auth:
+              Authorizer: NONE
+      Policies:
+        - S3CrudPolicy:
+            BucketName: my-bucketstorage123
+      Environment:
+        Variables:
+          STORAGE_BUCKET_NAME: my-bucketstorage123
+
+  ListFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: list_function/app.list_handler
+      Runtime: python3.12
+      Events:
+        FileList:
+          Type: Api
+          Properties:
+            Path: /list
+            Method: get
+            Auth:
+              Authorizer: NONE
+      Policies:
+        - S3ReadPolicy:
+            BucketName: my-bucketstorage123
+      Environment:
+        Variables:
+          STORAGE_BUCKET_NAME: my-bucketstorage123
+
+Outputs:
+  UploadFunctionApi:
+    Description: "API Gateway endpoint URL for Prod stage for Upload function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/upload"
+  DownloadFunctionApi:
+    Description: "API Gateway endpoint URL for Prod stage for Download function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/download"
+  DeleteFunctionApi:
+    Description: "API Gateway endpoint URL for Prod stage for Delete function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/delete"
+  ListFunctionApi:
+    Description: "API Gateway endpoint URL for Prod stage for List function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/list" 
+  UploadFunctionArn:
+    Description: "Lambda Function ARN for Upload function"
+    Value: !GetAtt UploadFunction.Arn
+  DownloadFunctionArn:
+    Description: "Lambda Function ARN for Download function"
+    Value: !GetAtt DownloadFunction.Arn
+  DeleteFunctionArn:
+    Description: "Lambda Function ARN for Delete function"
+    Value: !GetAtt DeleteFunction.Arn
+  ListFunctionArn:
+    Description: "Lambda Function ARN for List function"
+    Value: !GetAtt ListFunction.Arn
